@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+    <!-- The CSS package above applies Google styling to buttons and other elements. -->
+    
+    <script>
+      function initialize() {
+        // Call these two functions to initialize the UI when the page loads
+        getButtonsList();
+        getTileSetNames();
+      }
+
+      function createButton() {
+        // Get values from the form
+        var buttonName = document.getElementById("buttonName").value;
+        var buttonContent = document.getElementById("buttonContent").value;
+        // Call the server-side function to create a new button with the given name and content
+        google.script.run.withSuccessHandler(addButton).createButton(buttonName, buttonContent);
+        // Clear the form inputs after submitting
+        var form = document.getElementById("createButtonForm");
+        form.reset();
+      }
+
+      function addButton(button) {
+        // Get the element where the buttons will be added
+        var buttons = document.getElementById("buttons");
+        // Create a new button element
+        var buttonElement = document.createElement("button");
+        // Set the button text to the button name
+        buttonElement.innerHTML = button.name;
+        // Add an event listener to the button that will insert the button content into the document
+        buttonElement.addEventListener("click", function() {
+          google.script.run.insertText(button.content);
+        });
+        // Add the new button element to the UI
+        buttons.appendChild(buttonElement);
+      }
+
+      function getButtonsList() {
+        // Call the server-side function to get the current list of buttons
+        google.script.run.withSuccessHandler(loadButtons).loadButtons();
+      }
+
+      function loadButtons(buttons) {
+        // Remove all current buttons from the UI
+        let element = document.getElementById("buttons");
+        while (element.firstChild) {
+          element.removeChild(element.firstChild);
+        }
+        // Add each button from the current set to the UI
+        for (let i = 0; i < buttons.length; i++) {
+          addButton(buttons[i]);
+        }
+      }
+
+      function createTileSetName() {
+        // Get the new tile set name from the form input
+        var tileSetName = document.getElementById("tileSetName").value;
+        // Call the server-side function to create a new tile set with the given name
+        google.script.run.withSuccessHandler(addTileSetName).createTileSetName(tileSetName);
+        // Wait a short time before updating the UI to allow time for the server to update
+        setTimeout(getTileSetNames, 400);
+        // Clear the form inputs after submitting
+        var form = document.getElementById("newTileSetForm");
+        form.reset();
+      }
+
+      function addTileSetName(tileSetName) {
+        // Get the element where the tile set names will be added
+        var tileSets = document.getElementById("tileSets");
+        // Add a new option to the tile set selection with the given name and value
+        tileSets[tileSets.length] = new Option(tileSetName, tileSetName);
+      }
+
+      function getTileSetNames() {
+        // Call the server-side function to get the list of available tile sets
+        google.script.run.withSuccessHandler(loadTileSetNames).loadTileSetNames();
+      }
+
+      function loadTileSetNames(names) {
+        // Remove all current tile set names from the UI
+        var tileSets = document.getElementById("tileSets");
+        tileSets.length = 0;
+        // Add each tile set name from the list to the UI
+        for (let i = 0; i < names.length; i++) {
+          addTileSetName(names[i]);
+        }
+      }
+
+      function setActiveTileSet(){
+        // Get the list of tile set names from the dropdown menu
+        var tileSetNames = document.getElementById("tileSets");
+        var selectedTileSetIndex = tileSetNames.selectedIndex;
+        var tileSetOptionElement = tileSetNames[selectedTileSetIndex];
+        // Get the name of the selected option
+        var tileSetName = tileSetOptionElement.value;
+
+        // Call the server-side function to set the active tile set
+        google.script.run.setTileSetSelection(tileSetName);
+
+        // Delay calling getButtonsList to ensure the server-side function has completed
+        setTimeout(getButtonsList, 400);
+      }
+  </script>  
+  
+  </head>
+  <!-- The following code defines the main HTML page structure for the tile set application. -->
+  <head>
+  </head>
+  <body onload="initialize()">
+    
+    <!-- This form provides a button to clear all tile sets. -->
+    <form style="width: 100%;">
+      <input type="button" value="clear all tile sets" onclick="clearProperties()" style="width: 100%;">
+    </form>
+    <hr>
+
+    <!-- This form allows users to create a new tile set. -->
+    <p> Create a new tile set: </p>
+    <form id = "newTileSetForm" style="width: 100%;">
+      <input type="text" id="tileSetName" name="Tile set name" style="width: 100%;"><br><br>
+      <input type="button" value="Submit" onclick="createTileSetName()">
+    </form>
+    <hr>
+
+    <!-- This form allows users to select a tile set to load. -->
+    <form id = "selectTileSetForm" style="width: 100%;">
+      <label for="tileSets">Choose a TileSet:</label>
+      <select name="tileSets" id="tileSets">
+      </select>
+      <input type="button" value = "load tiles" onclick="setActiveTileSet()">
+    </form>
+    <hr>
+
+    <!-- This form allows users to create a new tile. -->
+    <p>Create a new tile:</p>
+    <form id = "createButtonForm" style="width: 100%;">
+      <label for="buttonName">Tile Name:</label>
+      <input type="text" id="buttonName" name="buttonName"><br><br>
+      <label for="buttonContent">Tile Content:</label><br>
+      <textarea id="buttonContent" name="buttonContent" rows="4" cols="50"></textarea><br><br>
+      <input type="button" value="Create Tile" onclick="createButton()">
+    </form>
+    <hr>
+
+    <!-- This div will contain all created tiles. -->
+    <p>Tiles:</p>
+    <div id="buttons">
+    </div>
+  </body>
+</html>
