@@ -103,6 +103,11 @@
         // Delay calling getButtonsList to ensure the server-side function has completed
         setTimeout(getButtonsList, 400);
       }
+
+      function clearProperties(){
+        var properties = PropertiesService.getDocumentProperties();
+        properties.deleteAllProperties();
+      }
   </script>  
   
   </head>
